@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	fb "github.com/huandu/facebook"
 	"gopkg.in/mgo.v2"
@@ -65,7 +66,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
+	session.SetMode(mgo.Monotonic, true)
 	defer session.Close()
 
 	db := session.DB("brandflask")
@@ -76,12 +77,18 @@ func main() {
 	var result []interface{}
 
 	db.C("brandrefx").Find(nil).All(&result)
+	db.C("brandimages").DropCollection()
+	bimages := db.C("brandimages")
 
 	for _, v := range result {
 		fbid := v.(bson.M)["fbid"]
 		images := retrieveImages(fbid.(string))
-		fmt.Println(images)
-		return
-
+		fmt.Println(fbid)
+		var item = make(map[string]interface{})
+		item["fbid"] = fbid.(string)
+		item["images"] = images
+		bimages.Insert(bson.M(item))
+		time.Sleep(1 * time.Second)
 	}
+
 }
