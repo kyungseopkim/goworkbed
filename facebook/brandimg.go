@@ -42,6 +42,11 @@ func retrieveImages(fbid string) []string {
 		"fields":       "id,name,albums",
 		"access_token": accessToken})
 
+	if res["albums"] == nil {
+		fmt.Println("skip")
+		return []string{}
+	}
+
 	data := res["albums"].(map[string]interface{})["data"]
 	for _, v := range data.([]interface{}) {
 		obj := v.(map[string]interface{})
@@ -80,6 +85,7 @@ func main() {
 	db.C("brandimages").DropCollection()
 	bimages := db.C("brandimages")
 
+	// retrieveImages("127539803930077")
 	for _, v := range result {
 		fbid := v.(bson.M)["fbid"]
 		images := retrieveImages(fbid.(string))
