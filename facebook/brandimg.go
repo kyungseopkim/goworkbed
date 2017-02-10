@@ -43,6 +43,7 @@ func retrieveImages(fbid string) []string {
 		"access_token": accessToken})
 
 	if res["albums"] == nil {
+		fmt.Println(res)
 		fmt.Println("skip")
 		return []string{}
 	}
@@ -88,8 +89,8 @@ func main() {
 	// retrieveImages("127539803930077")
 	for _, v := range result {
 		fbid := v.(bson.M)["fbid"]
-		images := retrieveImages(fbid.(string))
 		fmt.Println(fbid)
+		images := retrieveImages(fbid.(string))
 		var item = make(map[string]interface{})
 		item["fbid"] = fbid.(string)
 		item["images"] = images
