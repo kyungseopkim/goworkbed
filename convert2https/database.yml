@@ -1,0 +1,35 @@
+
+
+publishing-plus:
+  production:
+      host: publishing-plus-db.captora.com
+      user: publishing
+      password: publishing
+      database: publishingplus
+  development:
+      host: dev-publishing-plus-db.cvrzra09zv0k.us-west-1.rds.amazonaws.com
+      user: pplroot
+      password: j3X4ki7+94P3jh
+      database: publishingplus
+  staging:
+      host: stg-plus-publishing-db.captora.com
+      user: publishing
+      password: publishing
+      database: publishingplus
+
+directory:
+  production:
+      host: directorydb.captora.com
+      user: ds_admin
+      password: ?dkp=J>NBGl3g#n1
+      database: directoryservicesdb
+  development:
+      host: qa5-directory-db.captora.com
+      user: ds_admin
+      password: ?dkp=J>NBGl3g#n1
+      database: directoryservicesdb
+  staging:
+      host: stg-plus-directory-db.captora.com
+      user: ds_admin
+      password: ?dkp=J>NBGl3g#n1
+      database: directoryservicesdb
