@@ -61,12 +61,13 @@ func modifyPageGroup(account string, env interface{}, confirm string) {
 			sql := fmt.Sprintf("UPDATE account_page_groups SET pretext='%s' WHERE int_id=%d;", updated, id)
 			fmt.Println(sql)
 			if isexec {
-				_, err = db.Query(sql)
+				_, err = db.Exec(sql)
 				checkError(err)
 				fmt.Println("Executed")
 			}
 		}
 	}
+
 }
 
 func modifyPublishedURL(account string, env interface{}, confirm string) {
@@ -96,7 +97,7 @@ func modifyPublishedURL(account string, env interface{}, confirm string) {
 			sql := fmt.Sprintf("UPDATE campaign SET published_url='%s' WHERE campaign_id=%d;", updated, id)
 			fmt.Println(sql)
 			if isexec {
-				_, err = db.Query(sql)
+				_, err = db.Exec(sql)
 				checkError(err)
 				fmt.Println("Executed")
 			}
