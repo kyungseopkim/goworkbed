@@ -2,8 +2,8 @@ convert2https
 
 this is a tool to convert urls started with "http://" in account setting and published urls.
 
-CAUTION:
-convert2https and database.yml files should be the same folder.
+==CAUTION:==
+convert2https and database.yml files should be in the same folder.
 convert2https is looking database connection info at database.yml 
 
 Syntax:
