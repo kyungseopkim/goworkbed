@@ -6,13 +6,13 @@ import (
 )
 
 func ExampleInnoDate_tostring() {
-	val := innoDate{2000, 11, 12}
+	val := InnoDate{true, 2000, 11, 12}
 	fmt.Println(val)
 	//Output: 2000-11-12
 }
 
 func ExampleInnoDate_json_marshal() {
-	val := innoDate{2010, 1, 21}
+	val := InnoDate{true, 2010, 1, 21}
 	dat, err := json.Marshal(val)
 	if err != nil {
 		fmt.Println(err)
@@ -22,7 +22,7 @@ func ExampleInnoDate_json_marshal() {
 }
 
 func ExampleInnoDate_json_unmarshal() {
-	val := innoDate{2010, 1, 21}
+	val := InnoDate{true, 2010, 1, 21}
 	dat, err := json.Marshal(val)
 	if err != nil {
 		fmt.Println(err)
@@ -35,4 +35,10 @@ func ExampleInnoDate_json_unmarshal() {
 	fmt.Println(result)
 	//Output: 2010-01-21
 
+}
+
+func ExampleInnoTime() {
+	now := InnoTime{true, 12, 20}
+	fmt.Println(now.String())
+	//Output: 12:20
 }

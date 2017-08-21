@@ -2,37 +2,33 @@ package main
 
 import (
 	"encoding/csv"
+	"fmt"
 	"io"
 	"log"
 	"os"
 	"reflect"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/vjeantet/jodaTime"
 )
 
-func parseDate(input string) time.Time {
+func parseDate(input string) InnoDate {
 	date, err := jodaTime.Parse("yyyyMMdd", input)
 	if err != nil {
 		log.Println(err)
-		date = time.Date(1950, 1, 1, 0, 0, 0, 0, time.UTC)
+		return InnoDate{Exist: false}
 	}
-	return date
+	return InnoDate{true, date.Year(), int(date.Month()), date.Day()}
 }
 
-func parseTime(input string) time.Time {
-	ptime, err := jodaTime.Parse("HHmm", input)
+func parseTime(input string) InnoTime {
+	time, err := jodaTime.Parse("HHmm", input)
 	if err != nil {
-		ptime, err = jodaTime.Parse("Hmm", input)
-		if err != nil {
-			log.Println(err)
-			ptime = time.Date(1950, 1, 1, 0, 0, 0, 0, time.UTC)
-		}
+		log.Println(err)
+		return InnoTime{Exist: false}
 	}
-	ptime = time.Date(1950, 1, 1, ptime.Hour(), ptime.Minute(), 0, 0, time.UTC)
-	return ptime
+	return InnoTime{true, time.Hour(), time.Minute()}
 }
 
 func setValue2Operation(elem reflect.Value, field string, value interface{}) {
@@ -40,15 +36,15 @@ func setValue2Operation(elem reflect.Value, field string, value interface{}) {
 	f := elem.Elem().FieldByName(n)
 
 	switch n {
-	case "DayOfWeek":
-		dow := DayOfWeek[value.(string)]
-		f.Set(reflect.ValueOf(dow))
 	case "SID", "OperationKindID", "AnesthesiaID", "OperationRoom":
 		sid, err := strconv.Atoi(value.(string))
 		if err != nil {
 			log.Panic(err)
 		}
 		f.SetInt(int64(sid))
+	case "DayOfWeek":
+		dow := DayOfWeek[value.(string)]
+		f.Set(reflect.ValueOf(InnoWeekday(dow)))
 	case "ID", "DoctorID", "DoctorName", "DepartmentID", "DepartmentName", "OperationName",
 		"DiagnosisKind", "OperationKindName", "AnesthesiaName", "WardContact":
 		f.SetString(value.(string))
@@ -59,6 +55,8 @@ func setValue2Operation(elem reflect.Value, field string, value interface{}) {
 		"OperationEnd", "AnesthesiaAwaken", "RoomOutTime":
 		time := parseTime(value.(string))
 		f.Set(reflect.ValueOf(time))
+	case "FirstDiogonasis":
+		f.SetBool(value.(bool))
 	}
 
 }
@@ -103,10 +101,17 @@ func csvLoader(filename string) {
 }
 
 func main() {
-	InitMgo("testdb")
+	log.SetFlags(log.Lshortfile)
+	if len(os.Args) < 3 {
+		fmt.Println("inputfile dbname")
+		os.Exit(1)
+	}
+
+	dbname := os.Args[2]
+	InitMgo()
 	defer CloseMgo()
 
-	fid, err := os.Open("/Users/kkim/workspace/innohealth/operation.csv")
+	fid, err := os.Open(os.Args[1])
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -116,9 +121,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
-	data := make([]*Operation, 0)
-
+	var data []*Operation
 	for {
 		record, err := reader.Read()
 		if err == io.EOF {
@@ -130,7 +133,7 @@ func main() {
 		}
 
 		data = append(data, record2Operation(fields, record))
-	}
 
-	UpdateOPeration(data)
+	}
+	UpdateOPeration(dbname, data)
 }

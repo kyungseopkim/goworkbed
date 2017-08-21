@@ -10,12 +10,12 @@ import (
 )
 
 const (
+	// OperationCollection Const
 	OperationCollection = "operation"
 )
 
 var (
 	mgoSession *mgo.Session
-	dbName     string
 )
 
 //CloseMgo is ...
@@ -27,10 +27,9 @@ func CloseMgo() {
 }
 
 //InitMgo is ..
-func InitMgo(dbname string) {
+func InitMgo() {
 	CloseMgo()
-	dbName = dbname
-	connectURL := fmt.Sprintf("mongodb://testuser:innohealth@innohs.com/%s", dbname)
+	connectURL := fmt.Sprintf("mongodb://apiuser:resuipa@innohs.com/")
 	var err error
 	mgoSession, err = mgo.Dial(connectURL)
 	if err != nil {
@@ -55,12 +54,12 @@ func CheckIfCollection(db *mgo.Database, name string) bool {
 }
 
 // UpdateOPeration is ...
-func UpdateOPeration(data []*Operation) {
+func UpdateOPeration(dbname string, data []*Operation) {
 
 	session := mgoSession.Clone()
 	defer session.Close()
 
-	db := session.DB(dbName)
+	db := session.DB(dbname)
 
 	collection := db.C(OperationCollection)
 	if !CheckIfCollection(db, OperationCollection) {

@@ -8,37 +8,37 @@ import (
 
 // Operation is a type of Operation data
 type Operation struct {
-	SID               int          `json:"SN"`
-	ID                string       `json:"등록번호"`
-	FirstVist         time.Time    `json:"첫외래일"`
-	ApplicationDate   time.Time    `json:"수술예약신청일"`
-	DiagnosisKind     string       `json:"초재진"`
-	HospitalizedDate  time.Time    `json:"입원일자"`
-	ReservedDate      time.Time    `json:"수술예약일"`
-	OperationDate     time.Time    `json:"수술확정시행일"`
-	DoctorID          string       `json:"집도의"`
-	DoctorName        string       `json:"집도의명"`
-	DepartmentID      string       `json:"집도과"`
-	DepartmentName    string       `json:"집도과명"`
-	OperationName     string       `json:"수술명"`
-	DayOfWeek         time.Weekday `json:"요일"`
-	OperationKindID   int          `json:"수술구분"`
-	OperationKindName string       `json:"수술구분명"`
-	AnesthesiaID      int          `json:"마취구분"`
-	AnesthesiaName    string       `json:"마취구분명"`
-	OperationRoom     int          `json:"수술방"`
-	WardContact       string       `json:"병동연락"`
-	FrontArrivedTime  time.Time    `json:"입구도착"`
-	RoomEtranceTime   time.Time    `json:"수술방입실"`
-	AnesthesiaStart   time.Time    `json:"마취시작"`
-	AnesthesiaReady   time.Time    `json:"마취완료"`
-	OperationStart    time.Time    `json:"수술시작"`
-	OperationEnd      time.Time    `json:"수술종료"`
-	AnesthesiaAwaken  time.Time    `json:"마취종료"`
-	RoomOutTime       time.Time    `json:"환자퇴실"`
+	SID               int         `json:"SN"`
+	ID                string      `json:"등록번호"`
+	FirstVist         InnoDate    `json:"첫외래일"`
+	ApplicationDate   InnoDate    `json:"수술예약신청일"`
+	DiagnosisKind     string      `json:"초재진"`
+	HospitalizedDate  InnoDate    `json:"입원일자"`
+	ReservedDate      InnoDate    `json:"수술예약일"`
+	OperationDate     InnoDate    `json:"수술확정시행일"`
+	DoctorID          string      `json:"집도의"`
+	DoctorName        string      `json:"집도의명"`
+	DepartmentID      string      `json:"집도과"`
+	DepartmentName    string      `json:"집도과명"`
+	OperationName     string      `json:"수술명"`
+	DayOfWeek         InnoWeekday `json:"요일"`
+	OperationKindID   int         `json:"수술구분"`
+	OperationKindName string      `json:"수술구분명"`
+	AnesthesiaID      int         `json:"마취구분"`
+	AnesthesiaName    string      `json:"마취구분명"`
+	OperationRoom     int         `json:"수술방"`
+	WardContact       string      `json:"병동연락"`
+	FrontArrivedTime  InnoTime    `json:"입구도착"`
+	RoomEtranceTime   InnoTime    `json:"수술방입실"`
+	AnesthesiaStart   InnoTime    `json:"마취시작"`
+	AnesthesiaReady   InnoTime    `json:"마취완료"`
+	OperationStart    InnoTime    `json:"수술시작"`
+	OperationEnd      InnoTime    `json:"수술종료"`
+	AnesthesiaAwaken  InnoTime    `json:"마취종료"`
+	RoomOutTime       InnoTime    `json:"환자퇴실"`
 }
 
-// Field Names
+// FieldMap has mapping
 var FieldMap = map[string]string{
 	"SN":      "SID",
 	"등록번호":    "ID",
@@ -70,7 +70,7 @@ var FieldMap = map[string]string{
 	"환자퇴실":    "RoomOutTime",
 }
 
-// Struct to Fields
+// ReversFields has reverse mapping
 var ReversFields = map[string]string{
 	"SID":               "SN",
 	"ID":                "등록번호",
@@ -102,7 +102,7 @@ var ReversFields = map[string]string{
 	"RoomOutTime":       "환자퇴실",
 }
 
-// DayOfWeek
+// DayOfWeek mapping
 var DayOfWeek = map[string]time.Weekday{
 	"일": time.Sunday,
 	"월": time.Monday,
@@ -113,7 +113,18 @@ var DayOfWeek = map[string]time.Weekday{
 	"토": time.Saturday,
 }
 
-// Remove white space in string
+// RevDayOfWeek is mapping
+var RevDayOfWeek = map[time.Weekday]string{
+	time.Sunday:    "일",
+	time.Monday:    "월",
+	time.Tuesday:   "화",
+	time.Wednesday: "수",
+	time.Thursday:  "목",
+	time.Friday:    "금",
+	time.Saturday:  "토",
+}
+
+// StripWhiteSpace Remove white space in string
 func StripWhiteSpace(str string) string {
 	return strings.Map(func(r rune) rune {
 		if unicode.IsSpace(r) {
@@ -121,4 +132,10 @@ func StripWhiteSpace(str string) string {
 		}
 		return r
 	}, str)
+}
+
+// DoctorOperatoionStat has ..
+type DoctorOperatoionStat struct {
+	Doctor string `json:"의사"`
+	Count  int    `json:"수술"`
 }
