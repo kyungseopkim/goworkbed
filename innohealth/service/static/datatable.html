@@ -1,0 +1,93 @@
+<!DOCTYP html>
+<html>
+<head>
+  <meta charset="utf-8">
+</head>
+<body>
+<table id="example" class="display nowrap" cellspacing="0" width="100%">
+        <thead>
+            <tr>
+            <th>SN</th>
+            <th>등록번호</th>
+            <th>첫외래일</th>
+            <th>수술예약신청일</th>
+            <th>초재진</th>
+            <th>입원일자</th>
+            <th>수술예약일</th>
+            <th>수술확정시행일</th>
+            <th>집도의</th>
+            <th>집도의명</th>
+            <th>집도과</th>
+            <th>집도과명</th>
+            <th>수술명</th>
+            <th>요일</th>
+            <th>수술구분</th>
+            <th>수술구분명</th>
+            <th>마취구분</th>
+            <th>마취구분명</th>
+            <th>수술방</th>
+            <th>병동연락</th>
+            <th>입구도착</th>
+            <th>수술방입실</th>
+            <th>마취시작</th>
+            <th>마취완료</th>
+            <th>수술시작</th>
+            <th>수술종료</th>
+            <th>마취종료</th>
+            <th>환자퇴실</th>
+            </tr>
+        </thead>
+    </table>
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.15/js/jquery.dataTables.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.15/css/jquery.dataTables.min.css">
+<style>
+     div.dataTables_wrapper {
+	width: 800px;
+	margin: 0 auto
+     }
+</style>
+    <script>
+     $(document).ready(function() {
+         $('#example').DataTable(
+             {
+                "info" : false,
+                "ordering" : false,
+                "scrollX": true,
+                 "ajax" : "http://localhost:1323/operation?dbname=testdb&limit=100",
+                 "columns": [
+			{ "data": "SN" }
+			{ "data": "등록번호" }
+			{ "data": "첫외래일" }
+			{ "data": "수술예약신청일" }
+			{ "data": "초재진" }
+			{ "data": "입원일자" }
+			{ "data": "수술예약일" }
+			{ "data": "수술확정시행일" }
+			{ "data": "집도의" }
+			{ "data": "집도의명" }
+			{ "data": "집도과" }
+			{ "data": "집도과명" }
+			{ "data": "수술명" }
+			{ "data": "요일" }
+			{ "data": "수술구분" }
+			{ "data": "수술구분명" }
+			{ "data": "마취구분" }
+			{ "data": "마취구분명" }
+			{ "data": "수술방" }
+			{ "data": "병동연락" }
+			{ "data": "입구도착" }
+			{ "data": "수술방입실" }
+			{ "data": "마취시작" }
+			{ "data": "마취완료" }
+			{ "data": "수술시작" }
+			{ "data": "수술종료" }
+			{ "data": "마취종료" }
+			{ "data": "환자퇴실" } 
+                 ]
+             }
+         );
+      } );
+    </script>
+</body>
+</html>

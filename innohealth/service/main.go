@@ -15,6 +15,10 @@ func main() {
 	e.Use(middleware.Log())
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORS())
+	e.Use(middleware.Static(&middleware.StaticOptions{
+		Root: "static",
+		Path: "/static/",
+	}))
 
 	rid := 1
 	for _, router := range routing {

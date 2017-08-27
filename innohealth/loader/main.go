@@ -23,12 +23,36 @@ func parseDate(input string) InnoDate {
 }
 
 func parseTime(input string) InnoTime {
-	time, err := jodaTime.Parse("HHmm", input)
-	if err != nil {
-		log.Println(err)
-		return InnoTime{Exist: false}
+	if len(input) == 4 {
+		clock, err := jodaTime.Parse("HHmm", input)
+		if err != nil {
+			log.Println(err)
+			return InnoTime{Exist: false}
+		}
+		return InnoTime{true, clock.Hour(), clock.Minute()}
 	}
-	return InnoTime{true, time.Hour(), time.Minute()}
+
+	if len(input) == 3 {
+		hour, err := strconv.Atoi(string(input[0]))
+		if err != nil {
+			log.Println(err)
+			return InnoTime{Exist: false}
+		}
+		minute, err := strconv.Atoi(input[1:])
+		if err != nil {
+			log.Println(err)
+			return InnoTime{Exist: false}
+		}
+
+		if hour < 0 || hour > 24 {
+			return InnoTime{Exist: false}
+		}
+		if minute < 0 || minute > 60 {
+			return InnoTime{Exist: false}
+		}
+		return InnoTime{true, hour, minute}
+	}
+	return InnoTime{Exist: false}
 }
 
 func setValue2Operation(elem reflect.Value, field string, value interface{}) {
@@ -36,7 +60,7 @@ func setValue2Operation(elem reflect.Value, field string, value interface{}) {
 	f := elem.Elem().FieldByName(n)
 
 	switch n {
-	case "SID", "OperationKindID", "AnesthesiaID", "OperationRoom":
+	case "SID", "OperationKindID", "AnesthesiaID":
 		sid, err := strconv.Atoi(value.(string))
 		if err != nil {
 			log.Panic(err)
@@ -46,12 +70,12 @@ func setValue2Operation(elem reflect.Value, field string, value interface{}) {
 		dow := DayOfWeek[value.(string)]
 		f.Set(reflect.ValueOf(InnoWeekday(dow)))
 	case "ID", "DoctorID", "DoctorName", "DepartmentID", "DepartmentName", "OperationName",
-		"DiagnosisKind", "OperationKindName", "AnesthesiaName", "WardContact":
+		"DiagnosisKind", "OperationKindName", "AnesthesiaName", "WardContact", "OperationRoom":
 		f.SetString(value.(string))
 	case "FirstVist", "ApplicationDate", "HospitalizedDate", "ReservedDate", "OperationDate":
 		date := parseDate(value.(string))
 		f.Set(reflect.ValueOf(date))
-	case "FrontArrivedTime", "RoomEtranceTime", "AnesthesiaStart", "AnesthesiaReady", "OperationStart",
+	case "FrontArrivedTime", "RoomEntranceTime", "AnesthesiaStart", "AnesthesiaReady", "OperationStart",
 		"OperationEnd", "AnesthesiaAwaken", "RoomOutTime":
 		time := parseTime(value.(string))
 		f.Set(reflect.ValueOf(time))
@@ -69,6 +93,7 @@ func record2Operation(fields []string, record []string) *Operation {
 	for i, field := range fields {
 		setValue2Operation(reflect.ValueOf(operation), strings.TrimSpace(field), record[i])
 	}
+	//fmt.Printf("%+v", operation)
 	return operation
 }
 
@@ -97,6 +122,14 @@ func csvLoader(filename string) {
 			log.Fatal(err)
 		}
 		record2Operation(fields, record)
+	}
+}
+
+func printOperation(dbname string, data []*Operation) {
+	fmt.Println(dbname)
+	for _, item := range data {
+		//fmt.Printf("%+v\n", item)
+		fmt.Println(item.RoomEntranceTime, item.RoomOutTime)
 	}
 }
 
@@ -133,7 +166,7 @@ func main() {
 		}
 
 		data = append(data, record2Operation(fields, record))
-
 	}
+	//printOperation(dbname, data)
 	UpdateOPeration(dbname, data)
 }

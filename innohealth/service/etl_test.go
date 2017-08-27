@@ -34,3 +34,20 @@ func TestOperationByWeekday(t *testing.T) {
 
 	OperationByWeekdayStat("testdb")
 }
+
+func ExampleGetDistictValue() {
+	InitMgo()
+	defer CloseMgo()
+	session := mgoSession.Clone()
+	values, _ := GetDistictValue(session.DB("testdb"), "operationroom")
+	fmt.Println(values)
+	//Output: [1 2 3 5 6 7 8 9 10 11 12 13 15 16 17 18 19 0 20 21 22]
+}
+
+func ExampleOperationByTimStat() {
+	InitMgo()
+	defer CloseMgo()
+
+	fmt.Println(OperationByTimStat("testdb"))
+	//Output: -
+}

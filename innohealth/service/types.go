@@ -69,13 +69,13 @@ func (d *InnoDate) UnmarshalJSON(b []byte) error {
 // InnoTime represts Time info
 type InnoTime struct {
 	Exist  bool
-	hour   int
-	minute int
+	Hour   int
+	Minute int
 }
 
 func (time InnoTime) String() string {
 	if time.Exist {
-		return fmt.Sprintf("%02d:%02d", time.hour, time.minute)
+		return fmt.Sprintf("%02d:%02d", time.Hour, time.Minute)
 	}
 	return ""
 }
@@ -97,8 +97,61 @@ func (time *InnoTime) UnmarshalJSON(b []byte) error {
 	}
 	result := reg.FindStringSubmatch(s)
 	time.Exist = true
-	time.hour, _ = strconv.Atoi(result[1])
-	time.minute, _ = strconv.Atoi(result[2])
+	time.Hour, _ = strconv.Atoi(result[1])
+	time.Minute, _ = strconv.Atoi(result[2])
 
 	return nil
+}
+
+// Compare return comparison
+func (time InnoTime) Compare(other InnoTime) int {
+	if time.Exist && !other.Exist {
+		return 1
+	}
+
+	if !time.Exist && other.Exist {
+		return -1
+	}
+
+	if time.Hour == other.Hour {
+		return time.Hour - other.Hour
+	}
+	return time.Hour - other.Hour
+}
+
+func (time *InnoTime) delta(other InnoTime) InnoTime {
+	var result InnoTime
+
+	if !time.Exist {
+		return InnoTime{Exist: false}
+	}
+	minutes := time.Minute + other.Minute
+	deltaHour := minutes / 60
+	result.Minute = minutes % 60
+
+	hours := time.Hour + other.Hour + deltaHour
+	adjust := hours % 24
+	if adjust < 0 {
+		adjust = 24 - adjust
+	}
+	result.Hour = adjust
+
+	time.Hour = result.Hour
+	time.Minute = result.Minute
+	return result
+}
+
+// Floor return ...
+func (time InnoTime) Floor(interval int) InnoTime {
+	quotient := time.Minute / interval
+	return InnoTime{true, time.Hour, quotient * interval}
+}
+
+// EnumerateTo returns times between start and end
+func (time InnoTime) EnumerateTo(end InnoTime, interval int) []InnoTime {
+	result := make([]InnoTime, 0)
+	for current := time.Floor(interval); current.Compare(end.Floor(interval)) <= 0; current.delta(InnoTime{Minute: interval}) {
+		result = append(result, current)
+	}
+	return result
 }

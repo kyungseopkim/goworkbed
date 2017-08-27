@@ -69,13 +69,13 @@ func (d *InnoDate) UnmarshalJSON(b []byte) error {
 // InnoTime represts Time info
 type InnoTime struct {
 	Exist  bool
-	hour   int
-	minute int
+	Hour   int
+	Minute int
 }
 
 func (time InnoTime) String() string {
 	if time.Exist {
-		return fmt.Sprintf("%02d:%02d", time.hour, time.minute)
+		return fmt.Sprintf("%02d:%02d", time.Hour, time.Minute)
 	}
 	return ""
 }
@@ -97,8 +97,8 @@ func (time *InnoTime) UnmarshalJSON(b []byte) error {
 	}
 	result := reg.FindStringSubmatch(s)
 	time.Exist = true
-	time.hour, _ = strconv.Atoi(result[1])
-	time.minute, _ = strconv.Atoi(result[2])
+	time.Hour, _ = strconv.Atoi(result[1])
+	time.Minute, _ = strconv.Atoi(result[2])
 
 	return nil
 }

@@ -26,10 +26,10 @@ type Operation struct {
 	OperationKindName string      `json:"수술구분명"`
 	AnesthesiaID      int         `json:"마취구분"`
 	AnesthesiaName    string      `json:"마취구분명"`
-	OperationRoom     int         `json:"수술방"`
+	OperationRoom     string      `json:"수술방"`
 	WardContact       string      `json:"병동연락"`
 	FrontArrivedTime  InnoTime    `json:"입구도착"`
-	RoomEtranceTime   InnoTime    `json:"수술방입실"`
+	RoomEntranceTime  InnoTime    `json:"수술방입실"`
 	AnesthesiaStart   InnoTime    `json:"마취시작"`
 	AnesthesiaReady   InnoTime    `json:"마취완료"`
 	OperationStart    InnoTime    `json:"수술시작"`
@@ -61,7 +61,7 @@ var FieldMap = map[string]string{
 	"수술방":     "OperationRoom",
 	"병동연락":    "WardContact",
 	"입구도착":    "FrontArrivedTime",
-	"수술방입실":   "RoomEtranceTime",
+	"수술방입실":   "RoomEntranceTime",
 	"마취시작":    "AnesthesiaStart",
 	"마취완료":    "AnesthesiaReady",
 	"수술시작":    "OperationStart",
@@ -93,7 +93,7 @@ var ReversFields = map[string]string{
 	"OperationRoom":     "수술방",
 	"WardContact":       "병동연락",
 	"FrontArrivedTime":  "입구도착",
-	"RoomEtranceTime":   "수술방입실",
+	"RoomEntranceTime":  "수술방입실",
 	"AnesthesiaStart":   "마취시작",
 	"AnesthesiaReady":   "마취완료",
 	"OperationStart":    "수술시작",
