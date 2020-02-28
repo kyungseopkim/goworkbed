@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-fileter-stream
+  labels:
+    app: kafka-fileter-stream
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-fileter-stream
+  template:
+    metadata:
+      labels:
+        app: kafka-fileter-stream
+    spec:
+    spec:
+      containers:
+        - name: kafka-fileter-stream
+          image: 411026478373.dkr.ecr.us-east-1.amazonaws.com/kafka-filter:v0.1
+          imagePullPolicy: Always
+          command: ["/go/bin/kafka"]
+          env:
+            - name: KAFKA_BROKERS
+              value: "b-2.logging.2wby21.c6.kafka.us-east-1.amazonaws.com:9092,b-3.logging.2wby21.c6.kafka.us-east-1.amazonaws.com:9092,b-1.logging.2wby21.c6.kafka.us-east-1.amazonaws.com:9092"
+            - name: KAFKA_PROTOCOL
+              value: "PLAINTEXT"
+            - name: "KAFKA_OFFSET_RESET"
+              value: "latest"
+            - name: KAFKA_GROUP_ID
+              value: "kafka-filter"
+            - name: KAFKA_LISTEN_TOPIC
+              value: "signals"
+            - name: KAFKA_PRODUCE_TOPIC
+              value: "selected"
+            - name: FILTER_SIGNALS
+              value: IBMU_AlgoPkSoc,IBMU_StatsPkVbattsum,IBMU_StatsTempCellMax,IBMU_StatsTempCellMin,IMCUF_MotStatorTemp,IMCUF_IvtrTemp,IMCUF_OilTemp,IMCUF_FinalTqCmd,IMCUR_MotStatorTemp,IMCUR_IvtrTemp,IMCUR_OilTemp,IMCUR_FinalTqCmd,IVehSpd,TCU_GPS_Data_Longitude,TCU_GPS_Data_Altitude,TCU_GPS_Data_Speed
