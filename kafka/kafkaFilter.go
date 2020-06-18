@@ -50,7 +50,7 @@ func main() {
 					log.Fatalf("Delivery failed: %v\n", ev.TopicPartition)
 				} else {
 					if count == 100 {
-						log.Printf("message %s\n", ev.Value)
+						//log.Printf("message %s\n", ev.Value)
 						count = 0
 					}
 					count++

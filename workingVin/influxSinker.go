@@ -22,23 +22,43 @@ func InfluxSinker(influx client.Client, data []*Signal, options InfluxDBOptions)
 		log.Fatalln(err)
 	}
 
-	points := make([]*client.Point, 0)
+	vins := make(map[string]map[string]int32)
 	for _, signal := range data {
-		tags := make(map[string]string)
-		tags["vin"] = signal.Vin
-		tags["signalName"] = signal.SignalName
 		event := time.Unix(int64(signal.Epoch), 0)
 		loc, _ := time.LoadLocation("America/Los_Angeles")
 		pst:= event.In(loc)
-		tags["eventDay"] = pst.Format(time.RFC3339)[:10]
-		fields := make(map[string]interface{})
-		fields["value"] = signal.Value
-		tz := time.Now()
-		point, er := client.NewPoint(options.Measurement, tags, fields, tz)
-		if er != nil {
-			log.Println(er)
+		eventDay := pst.Format(time.RFC3339)[:10]
+
+		vin, ok := vins[signal.Vin]
+		if ok {
+			count, ok1 := vin[eventDay]
+			if ok1 {
+				vin[eventDay] = count + 1
+			} else {
+				vin[eventDay] = 1
+			}
+		} else {
+			events := make(map[string]int32)
+			events[eventDay]= 1
+			vins[signal.Vin] = events
 		}
-		points = append(points, point)
+	}
+
+	points := make([]*client.Point, 0)
+	for vin, events := range vins {
+		for event, count := range events {
+			tags := make(map[string]string)
+			tags["vin"] = vin
+			tags["eventDay"] = event
+			fields := make(map[string]interface{})
+			fields["count"] = count
+			tz := time.Now()
+			point, er := client.NewPoint(options.Measurement, tags, fields, tz)
+			if er != nil {
+				log.Println(er)
+			}
+			points = append(points, point)
+		}
 	}
 
 	bp.AddPoints(points)
@@ -101,7 +121,7 @@ func main() {
 				buffer = buffer[:0]
 				nowCheck := time.Now()
 				if nowCheck.Sub(prevCheck) > 5 {
-					log.Println("working :" + signal.String())
+					//log.Println("working :" + signal.String())
 					prevCheck= nowCheck
 				}
 				prevTime = now
