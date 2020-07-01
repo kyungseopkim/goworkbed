@@ -42,5 +42,3 @@ spec:
               value: "oneMonth"
             - name: INFLUXDB_DURATION
               value: "10"
-            - name: V2VEHICLES
-              value: "000014,000002,000020,000021,pratee,000013,000041,000040,000017,000012,000019"
