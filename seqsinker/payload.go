@@ -5,6 +5,9 @@ import (
     "encoding/base64"
     "encoding/binary"
     "encoding/json"
+    "errors"
+    "fmt"
+    "github.com/pierrec/lz4"
     "log"
 )
 
@@ -24,84 +27,160 @@ func (p Payload) String () string {
     return string(bstr)
 }
 
-func getByte(reader *bytes.Reader) uint8 {
-    data, err := reader.ReadByte()
+func getByte(reader *bytes.Reader) (uint8, error) {
+    dat, err := reader.ReadByte()
     if err != nil {
-        log.Fatalln(err)
+        return 0, err
     }
-    return uint8(data)
+    return uint8(dat), nil
 }
 
-func GetVin(reader *bytes.Reader) string {
-    len := getByte(reader)
+func GetVin(reader *bytes.Reader) (string, error) {
+    len, err := getByte(reader)
+    if err != nil{
+        return "", err
+    }
     vin := make([]byte, int(len))
     n, err := reader.Read(vin)
     if err != nil {
-        log.Fatalln(err)
+        return "", err
     }
     if int(len) != n {
-        log.Fatalln("length reading failure")
+        log.Println(fmt.Sprintf("length reading failure %d != %d", int(len), n))
+        return "", errors.New("reading error")
     }
 
-    return string(vin)
+    return string(vin), nil
 }
 
-func GetPacketVer(reader *bytes.Reader) int32 {
-    return int32(getByte(reader))
+func GetPacketVer(reader *bytes.Reader) (int32, error) {
+    val , err := getByte(reader)
+    if err != nil {
+        return 0, err
+    }
+    return int32(val), nil
 }
 
-func getInt(reader *bytes.Reader) uint32 {
+func getInt(reader *bytes.Reader) (uint32, error) {
     data := make([]byte, 4)
     _, err := reader.Read(data)
     if err != nil {
-        log.Fatalln(err)
+        return 0, err
     }
 
-    return binary.BigEndian.Uint32(data)
+    return binary.BigEndian.Uint32(data), nil
 }
 
-func GetArxml(reader *bytes.Reader) int32 {
-    return int32(getInt(reader))
+func GetArxml(reader *bytes.Reader) (int32, error) {
+    val, err := getInt(reader)
+    if err != nil {
+        return 0, err
+    }
+    return int32(val), nil
 }
 
-func GetSeq(reader *bytes.Reader) int32 {
-    return int32(getByte(reader))
+func GetSeq(reader *bytes.Reader) (int32, error) {
+    val, err := getByte(reader)
+    if err != nil {
+        return 0, err
+    }
+    return int32(val), nil
 }
 
-func GetVlan(reader *bytes.Reader) int32 {
-    return int32(getByte(reader))
+func GetVlan(reader *bytes.Reader) (int32, error) {
+    val, err := getByte(reader)
+    if err != nil {
+        return 0, err
+    }
+    return int32(val), nil
 }
 
-func GetTs(reader *bytes.Reader) int64 {
+func GetTs(reader *bytes.Reader) (int64, error) {
     ts := make([]byte, 8)
     _, err := reader.Read(ts)
     if err != nil {
-        log.Fatalln(err)
+        return 0, nil
     }
-    return int64(binary.BigEndian.Uint64(ts))
+    return int64(binary.BigEndian.Uint64(ts)), nil
 }
 
-func GetUsec(reader *bytes.Reader) int32 {
-    return int32(getInt(reader))
+func GetUsec(reader *bytes.Reader) (int32, error) {
+    val, err := getInt(reader)
+    if err != nil {
+        return 0, err
+    }
+    return int32(val), nil
+}
+
+func decompress(content []byte) ([]byte, error) {
+    bucket := make([]byte, 10*1024*1024)
+    size, err := lz4.UncompressBlock(content, bucket )
+    if err != nil {
+        log.Println(err)
+        return nil, err
+    }
+    return bucket[:size], nil
+}
+
+func GetPayload(data []byte, v2 V2Vehicle,landing int64, payload string) *Payload {
+    content, err := decompress(data)
+    if err != nil {
+        return nil
+    }
+    reader := bytes.NewReader(content)
+    vin, err := GetVin(reader)
+    if err != nil {
+        log.Println(err)
+        return nil
+    }
+    if ! v2.Contains(vin) {
+        return nil
+    }
+    ver, err := GetPacketVer(reader)
+    if err != nil {
+        log.Println(err)
+        return nil
+    }
+
+    if ver != 2 {
+      log.Println(fmt.Sprintf("packet ver == %d", ver ))
+      return nil
+    }
+
+    arxml, err := GetArxml(reader)
+    if err != nil {
+        log.Println(err)
+        return nil
+    }
+    seq, err := GetSeq(reader)
+    if err != nil {
+        log.Println(err)
+        return nil
+    }
+    vlan, err := GetVlan(reader)
+    if err != nil {
+        log.Println(err)
+        return nil
+    }
+    ts, err := GetTs(reader)
+    if err != nil {
+        log.Println(err)
+        return nil
+    }
+    usec, err := GetUsec(reader)
+    if err != nil {
+        log.Println(err)
+        return nil
+    }
+    ts = (ts * 1000000) + int64(usec) // microsecs
+    return &Payload{vin, ver,arxml, seq, vlan, ts, landing, payload}
 }
 
 func PayloadFromKafkaMessage(msg *KafkaMessage, v2 V2Vehicle) *Payload {
     bindata, err := base64.StdEncoding.DecodeString(msg.Payload)
-    if err == nil {
+    if err != nil {
         log.Println(err)
         return nil
     }
-    reader := bytes.NewReader(bindata)
-    vin := GetVin(reader)
-    if ! v2.Contains(vin) {
-        return nil
-    }
-    ver := GetPacketVer(reader)
-    arxml := GetArxml(reader)
-    seq := GetSeq(reader)
-    vlan := GetVlan(reader)
-    ts := GetTs(reader)
-    usec := GetUsec(reader)
-    ts = (ts * 1000000) + int64(usec) // microsecs
-    return &Payload{vin, ver,arxml, seq, vlan, ts, msg.Timestamp,msg.Payload}
+    return GetPayload(bindata, v2, msg.Timestamp, msg.Payload)
 }

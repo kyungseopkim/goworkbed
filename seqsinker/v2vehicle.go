@@ -21,10 +21,14 @@ func (v2 V2Vehicle) Contains(key string) bool {
     return false
 }
 
-func (v2 V2Vehicle) FromEnv() {
-    values := os.Getenv("V2VEHICLES")
-    for _, item := range strings.Split(values, ",") {
+func (v2 V2Vehicle) FromString(cars string ) {
+    for _, item := range strings.Split(cars, ",") {
         v2[item]=exists
     }
+}
+
+func (v2 V2Vehicle) FromEnv() {
+    values := os.Getenv("V2VEHICLES")
+    v2.FromString(values)
 }
 
