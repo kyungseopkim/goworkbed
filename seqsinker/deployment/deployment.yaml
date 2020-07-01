@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mqtt-sequence-influx-sinker
+  labels:
+    app: mqtt-sequence-influx-sinker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mqtt-sequence-influx-sinker
+  template:
+    metadata:
+      labels:
+        app: mqtt-sequence-influx-sinker
+    spec:
+      containers:
+        - name: mqtt-sequence-influx-sinker
+          image: 411026478373.dkr.ecr.us-east-1.amazonaws.com/mqtt-payload-metadata-sinker:v0.0.1
+          imagePullPolicy: Always
+          command: ["/go/bin/seqsinker"]
+          env:
+            - name: KAFKA_BROKERS
+              value: "b-1.logging-dev.4a0fci.c6.kafka.us-east-1.amazonaws.com:9094,b-4.logging-dev.4a0fci.c6.kafka.us-east-1.amazonaws.com:9094,b-6.logging-dev.4a0fci.c6.kafka.us-east-1.amazonaws.com:9094"
+            - name: KAFKA_PROTOCOL
+              value: "ssl"
+            - name: KAFKA_OFFSET_RESET
+              value: "latest"
+            - name: KAFKA_GROUP_ID
+              value: "sequence-counter"
+            - name: KAFKA_LISTEN_TOPIC
+              value: "raw_car_messages"
+            - name: INFLUXDB_SERVER
+              value: "ec2-52-200-125-59.compute-1.amazonaws.com:8086"
+            - name: INFLUXDB_DB
+              value: "mqtt_messages"
+            - name: INFLUXDB_UPDATE
+              value: "100"
+            - name: INFLUXDB_MEASUREMENT
+              value: "seqcounter"
+            - name: INFLUXDB_RETENTION
+              value: "oneMonth"
+            - name: INFLUXDB_DURATION
+              value: "10"
+            - name: V2VEHICLES
+              value: "000014,000002,000020,000021,pratee,000013,000041,000040,000017,000012,000019"
