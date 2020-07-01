@@ -18,7 +18,6 @@ type SinkerOptions struct {
 	Update       string
 	Duration     string
 	MaxRecords   string
-	V2Vehicle    string
 }
 
 func getElse(variable string, value *string) {
@@ -33,8 +32,8 @@ func GetSinkerOptions() SinkerOptions {
 		OffsetReset: "latest", Topic: "raw_car_messages", InfluxServer: "localhost:8086",
 		InfluxDB: "mqtt_messages",
 		Measurement: "seqcounter", Retension: "oneMonth", Update: "500", Duration: "10", MaxRecords: "500",
-		V2Vehicle: "000014",
 	}
+
 	getElse("KAFKA_BROKERS", &options.Brokers)
 	getElse("KAFKA_PROTOCOL", &options.Protocol)
 	getElse("KAFKA_GROUP_ID", &options.GroupID)
@@ -47,7 +46,6 @@ func GetSinkerOptions() SinkerOptions {
 	getElse("INFLUXDB_UPDATE", &options.Update)
 	getElse("INFLUXDB_DURATION", &options.Duration)
 	getElse("KAFKA_MAX_RECORDS", &options.MaxRecords)
-	getElse("V2VEHICLES", &options.V2Vehicle)
 	return options
 }
 

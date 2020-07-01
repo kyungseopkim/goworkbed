@@ -13,9 +13,9 @@ type V2Vehicle map[string]struct{}
 
 var exists = struct{}{}
 
-func (v2 V2Vehicle) String() string {
-	return v2.String()
-}
+//func (v2 V2Vehicle) String() string {
+//	return v2.String()
+//}
 
 func (v2 V2Vehicle) Contains(key string) bool {
 	_, ok := v2[key]
@@ -49,13 +49,12 @@ func (v2 V2Vehicle) FromS3() {
 		log.Fatalln(err)
 	}
 
-	//v2s := V2Vehicles{}
 	m := make(map[interface{}]interface{})
 	err = yaml.Unmarshal(objBytes, &m)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	for _, v := range m["vehicles"].([]string) {
-		v2[v] = exists
+	for _, v := range m["vehicles"].([]interface{}) {
+		v2[v.(string)] = exists
 	}
 }

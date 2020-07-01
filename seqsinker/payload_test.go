@@ -32,7 +32,7 @@ func TestPayloadFromKafkaMessage(t *testing.T) {
         panic(err)
     }
     v2 := make(V2Vehicle)
-    v2.FromString("000035")
+    v2.FromS3()
 
     payload := GetPayload(dat, v2, time.Now().Unix(), "abcdef")
     fmt.Println(payload)

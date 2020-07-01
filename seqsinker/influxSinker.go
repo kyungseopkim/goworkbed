@@ -10,15 +10,12 @@ import (
 	"time"
 )
 
-func InfluxSinker(influx client.Client, data []*KafkaMessage, options SinkerOptions) {
+func InfluxSinker(influx client.Client, data []*KafkaMessage, v2 V2Vehicle, options SinkerOptions) {
 	conf := client.BatchPointsConfig{Precision: "ms",
 		Database:         options.InfluxDB,
 		RetentionPolicy:  options.Retension,
 		WriteConsistency: "any",
 	}
-
-	v2 := make(V2Vehicle)
-	v2.FromS3()
 
 	bp, err := client.NewBatchPoints(conf)
 	if err != nil {
@@ -64,6 +61,10 @@ func InfluxSinker(influx client.Client, data []*KafkaMessage, options SinkerOpti
 func main() {
 	options := GetSinkerOptions()
 	log.Println(options)
+
+	v2 := make(V2Vehicle)
+	v2.FromS3()
+	log.Println(v2)
 
 	c, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers": options.Brokers,
@@ -117,7 +118,7 @@ func main() {
 			if len(buffer) == maxBuffer || current.Sub(prevSync).Seconds() > float64(limit) {
 				bufferClone := make([]*KafkaMessage, len(buffer))
 				copy(bufferClone, buffer)
-				go InfluxSinker(influx, bufferClone, options)
+				go InfluxSinker(influx, bufferClone, v2, options)
 				buffer = buffer[:0]
 				now := time.Now()
 				if now.Sub(prevCheck).Seconds() > 10 {
