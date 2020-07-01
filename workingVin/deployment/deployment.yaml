@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: influxdb-working-vin
+  labels:
+    app: influxdb-working-vin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: influxdb-working-vin
+  template:
+    metadata:
+      labels:
+        app: influxdb-working-vin
+    spec:
+      containers:
+        - name: influxdb-working-vin
+          image: 411026478373.dkr.ecr.us-east-1.amazonaws.com/influxdb-sinker:v0.3
+          imagePullPolicy: Always
+          command: ["/go/bin/workingVin"]
+          env:
+            - name: KAFKA_BROKERS
+              value: "b-2.logging.2wby21.c6.kafka.us-east-1.amazonaws.com:9094,b-3.logging.2wby21.c6.kafka.us-east-1.amazonaws.com:9094,b-1.logging.2wby21.c6.kafka.us-east-1.amazonaws.com:9094"
+            - name: KAFKA_PROTOCOL
+              value: "ssl"
+            - name: KAFKA_OFFSET_RESET
+              value: "latest"
+            - name: KAFKA_GROUP_ID
+              value: "influx-working-vin-2020-04-25"
+            - name: KAFKA_LISTEN_TOPIC
+              value: "arxml_signals"
+            - name: INFLUXDB_SERVER
+              value: "ec2-3-231-151-210.compute-1.amazonaws.com:8086"
+            - name: INFLUXDB_DB
+              value: "kafka_decoding"
+            - name: INFLUXDB_UPDATE
+              value: "20000"
+            - name: INFLUXDB_MEASUREMENT
+              value: "workingvin"
+            - name: INFLUXDB_RETENTION
+              value: "aDay"
