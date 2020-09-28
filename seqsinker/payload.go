@@ -35,6 +35,15 @@ func getByte(reader *bytes.Reader) (uint8, error) {
     return uint8(dat), nil
 }
 
+func getUShort(reader *bytes.Reader) (uint16, error) {
+    data := make([]byte, 2)
+    _, err := reader.Read(data)
+    if err != nil {
+        return 0, err
+    }
+    return binary.BigEndian.Uint16(data), nil
+}
+
 func GetVin(reader *bytes.Reader) (string, error) {
     len, err := getByte(reader)
     if err != nil{
@@ -79,15 +88,26 @@ func GetArxml(reader *bytes.Reader) (int32, error) {
     return int32(val), nil
 }
 
-func GetSeq(reader *bytes.Reader) (int32, error) {
-    val, err := getByte(reader)
-    if err != nil {
-        return 0, err
+func GetSeq(ver int32, reader *bytes.Reader) (int32, error) {
+    switch ver {
+    case 2:
+        seq, err := getByte(reader)
+        if err != nil {
+            return 0, err
+        }
+        return int32(seq), nil
+    default:
+        seq, err := getUShort(reader)
+        if err != nil {
+            return 0, err
+        }
+        return int32(seq), nil
     }
-    return int32(val), nil
 }
 
-func GetVlan(reader *bytes.Reader) (int32, error) {
+func GetVlan(ver int32, reader *bytes.Reader) (int32, error) {
+    if ver > 2 { return 0, nil}
+
     val, err := getByte(reader)
     if err != nil {
         return 0, err
@@ -142,7 +162,7 @@ func GetPayload(data []byte, v2 V2Vehicle,landing int64, payload string) *Payloa
         return nil
     }
 
-    if ver != 2 {
+    if ver < 2 {
       log.Println(fmt.Sprintf("packet ver == %d", ver ))
       return nil
     }
@@ -152,12 +172,12 @@ func GetPayload(data []byte, v2 V2Vehicle,landing int64, payload string) *Payloa
         log.Println(err)
         return nil
     }
-    seq, err := GetSeq(reader)
+    seq, err := GetSeq(ver, reader)
     if err != nil {
         log.Println(err)
         return nil
     }
-    vlan, err := GetVlan(reader)
+    vlan, err := GetVlan(ver, reader)
     if err != nil {
         log.Println(err)
         return nil

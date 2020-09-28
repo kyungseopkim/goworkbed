@@ -28,7 +28,7 @@ RUN apk update && apk add --no-cache  \
 
 WORKDIR /root
 RUN cd $(mktemp -d) && \
-    wget -nv -O v1.4.0.tar.gz https://github.com/edenhill/librdkafka/archive/v1.4.0.tar.gz && \
+    wget -nv -O v1.4.0.tar.gz https://github.com/edenhill/librdkafka/archive/v1.4.2.tar.gz && \
     tar -xz --strip-components=1 -f v1.4.0.tar.gz && \
     rm -f v1.4.0.tar.gz && \
     ./configure --prefix=/usr --enable-sasl && \
@@ -38,8 +38,9 @@ RUN cd $(mktemp -d) && \
 RUN  curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 ADD . /go/src/github.com/kyungseopkim/goworkbed/seqsinker
 WORKDIR /go/src/github.com/kyungseopkim/goworkbed/seqsinker
-RUN dep init
+RUN go mod init && go mod vendor  
 RUN go build -tags dynamic -o seqsinker && cp seqsinker /go/bin
+#RUN go build -o seqsinker && cp seqsinker /go/bin
 
 FROM golang:1.14.2-alpine AS final
 COPY --from=build /usr/lib/librdkafka* /usr/lib/
