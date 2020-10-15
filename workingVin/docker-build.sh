@@ -1,7 +1,7 @@
 #!/bin/bash
 
-VERSION=v0.7
+VERSION=v5.0
 IMG=411026478373.dkr.ecr.us-east-1.amazonaws.com/influxdb-sinker:$VERSION
+ecr-login
 docker build -t $IMG .
-docker-ecr-login
 docker push $IMG

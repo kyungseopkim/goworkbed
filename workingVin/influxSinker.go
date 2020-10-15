@@ -2,25 +2,16 @@ package main
 
 import (
 	"fmt"
-	_ "github.com/influxdata/influxdb1-client" // this is important because of the bug in go mod
-	client "github.com/influxdata/influxdb1-client/v2"
 	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
+	"github.com/influxdata/influxdb-client-go/v2"
 	"log"
 	"strconv"
 	"time"
 )
 
-func InfluxSinker(influx client.Client, data []*Signal, options InfluxDBOptions)  {
-	conf := client.BatchPointsConfig{Precision:"ms",
-		Database: options.InfluxDB,
-		RetentionPolicy: options.Retention,
-		WriteConsistency: "any",
-	}
-
-	bp, err := client.NewBatchPoints(conf)
-	if err != nil {
-		log.Fatalln(err)
-	}
+func InfluxSinker(influx influxdb2.Client, data []*Signal, options InfluxDBOptions)  {
+	bucket := fmt.Sprintf("%s/%s", options.InfluxDB, options.Retention)
+	writeAPI := influx.WriteAPI("",bucket)
 
 	vins := make(map[string]map[string]int32)
 	for _, signal := range data {
@@ -44,7 +35,6 @@ func InfluxSinker(influx client.Client, data []*Signal, options InfluxDBOptions)
 		}
 	}
 
-	points := make([]*client.Point, 0)
 	for vin, events := range vins {
 		for event, count := range events {
 			tags := make(map[string]string)
@@ -53,19 +43,14 @@ func InfluxSinker(influx client.Client, data []*Signal, options InfluxDBOptions)
 			fields := make(map[string]interface{})
 			fields["count"] = count
 			tz := time.Now()
-			point, er := client.NewPoint(options.Measurement, tags, fields, tz)
-			if er != nil {
-				log.Println(er)
-			}
-			points = append(points, point)
+			point := influxdb2.NewPoint(options.Measurement, tags, fields, tz)
+			writeAPI.WritePoint(point)
 		}
 	}
 
-	bp.AddPoints(points)
-	err = influx.Write(bp)
-	if err != nil {
-		log.Println(err)
-	}
+	writeAPI.Flush()
+	log.Println(fmt.Sprintf("%d - Okay", len(data)))
+
 }
 
 func main() {
@@ -87,18 +72,14 @@ func main() {
 	}
 
 	influxUrl := fmt.Sprintf("http://%s", influxOptions.InfluxServer)
-	influx, er := client.NewHTTPClient(client.HTTPConfig{
-		Addr: influxUrl,
-	})
-	if er != nil {
-		log.Println("Error creating InfluxDB Client: ", err.Error())
-	}
-	defer influx.Close()
 
 	maxBuffer, er1 := strconv.Atoi(influxOptions.Update)
 	if er1 != nil {
 		log.Fatalln(err)
 	}
+	client := influxdb2.NewClientWithOptions(influxUrl, "my-token",
+		influxdb2.DefaultOptions().SetBatchSize(uint(maxBuffer)))
+	defer client.Close()
 
 	err = c.SubscribeTopics([]string{kafkaOptions.Topic}, nil)
 	if err != nil {
@@ -117,7 +98,7 @@ func main() {
 			if len(buffer) == maxBuffer || now.Sub(prevTime).Seconds() > influxOptions.getBatch() {
 				bufferClone := make([]*Signal, len(buffer))
 				copy(bufferClone, buffer)
-				go InfluxSinker(influx, bufferClone, influxOptions)
+				go InfluxSinker(client, bufferClone, influxOptions)
 				buffer = buffer[:0]
 				nowCheck := time.Now()
 				if nowCheck.Sub(prevCheck) > 5 {

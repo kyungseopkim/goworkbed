@@ -28,9 +28,9 @@ RUN apk update && apk add --no-cache  \
 
 WORKDIR /root
 RUN cd $(mktemp -d) && \
-    wget -nv -O v1.4.0.tar.gz https://github.com/edenhill/librdkafka/archive/v1.4.0.tar.gz && \
-    tar -xz --strip-components=1 -f v1.4.0.tar.gz && \
-    rm -f v1.4.0.tar.gz && \
+    wget -nv -O v1.4.2.tar.gz https://github.com/edenhill/librdkafka/archive/v1.4.2.tar.gz && \
+    tar -xz --strip-components=1 -f v1.4.2.tar.gz && \
+    rm -f v1.4.2.tar.gz && \
     ./configure --prefix=/usr --enable-sasl && \
     make -j && \
     make install
@@ -38,7 +38,7 @@ RUN cd $(mktemp -d) && \
 RUN  curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 ADD . /go/src/github.com/kyungseopkim/goworkbed/workingVin
 WORKDIR /go/src/github.com/kyungseopkim/goworkbed/workingVin
-RUN dep init
+RUN go mod vendor
 RUN go build -tags dynamic -o workingVin && cp workingVin /go/bin
 
 FROM golang:1.14.2-alpine AS final
