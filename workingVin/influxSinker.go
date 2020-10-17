@@ -7,6 +7,7 @@ import (
 	"log"
 	"strconv"
 	"time"
+	//"github.com/panjf2000/ants/v2"
 )
 
 func InfluxSinker(influx influxdb2.Client, data []*Signal, options InfluxDBOptions)  {
@@ -58,6 +59,17 @@ func main() {
 	influxOptions := GetInfluxDBOptions()
 	log.Println(kafkaOptions)
 	log.Println(influxOptions)
+	//defer ants.Release()
+
+	//pool, _ := ants.NewPoolWithFunc(10, func(args interface{}) {
+	//	params := args.(map[string]interface{})
+	//	client := params["client"].(influxdb2.Client)
+	//	data := params["data"].([]*Signal)
+	//	options := params["options"].(InfluxDBOptions)
+	//	InfluxSinker(client, data, options)
+	//})
+
+	//defer pool.Release()
 
 	c, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers": kafkaOptions.Brokers,
@@ -66,10 +78,11 @@ func main() {
 		"security.protocol": kafkaOptions.Protocol,
 	})
 
-	defer c.Close()
 	if err != nil {
 		panic(err)
 	}
+	defer c.Close()
+
 
 	influxUrl := fmt.Sprintf("http://%s", influxOptions.InfluxServer)
 
@@ -96,9 +109,15 @@ func main() {
 			buffer = append(buffer, signal)
 			now := time.Now()
 			if len(buffer) == maxBuffer || now.Sub(prevTime).Seconds() > influxOptions.getBatch() {
-				bufferClone := make([]*Signal, len(buffer))
-				copy(bufferClone, buffer)
-				go InfluxSinker(client, bufferClone, influxOptions)
+				//bufferClone := make([]*Signal, len(buffer))
+				//copy(bufferClone, buffer)
+				InfluxSinker(client, buffer, influxOptions)
+				//go InfluxSinker(client, bufferClone, influxOptions)
+				//params := make(map[string]interface{})
+				//params["client"] = client
+				//params["data"] = bufferClone
+				//params["options"] = influxOptions
+				//pool.Invoke(params)
 				buffer = buffer[:0]
 				nowCheck := time.Now()
 				if nowCheck.Sub(prevCheck) > 5 {
