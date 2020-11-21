@@ -2,14 +2,12 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"runtime"
-	"time"
-	"strconv"
 	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 	"github.com/influxdata/influxdb-client-go/v2"
+	"log"
+	"strconv"
+	"time"
 	//"github.com/panjf2000/ants/v2"
-	//"github.com/Jeffail/tunny"
 )
 
 func InfluxSinker(influx influxdb2.Client, data []*Signal, options InfluxDBOptions)  {
@@ -59,10 +57,8 @@ func InfluxSinker(influx influxdb2.Client, data []*Signal, options InfluxDBOptio
 func main() {
 	kafkaOptions := GetKafkaOptions()
 	influxOptions := GetInfluxDBOptions()
-	numCPUs := runtime.NumCPU()
 	log.Println(kafkaOptions)
 	log.Println(influxOptions)
-	log.Println(numCPUs)
 	//defer ants.Release()
 
 	//pool, _ := ants.NewPoolWithFunc(10, func(args interface{}) {
@@ -75,26 +71,11 @@ func main() {
 
 	//defer pool.Release()
 
-	//pool := tunny.NewFunc(numCPUs, func(args interface{}) interface{} {
-	//	params := args.(map[string]interface{})
-	//	client := params["client"].(influxdb2.Client)
-	//	data := params["data"].([]*Signal)
-	//	options := params["options"].(InfluxDBOptions)
-	//	InfluxSinker(client, data, options)
-	//	return nil
-	//
-	//})
-	//
-	//defer pool.Close()
-
 	c, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers": kafkaOptions.Brokers,
 		"group.id":          kafkaOptions.GroupID,
 		"auto.offset.reset": kafkaOptions.OffsetReset,
 		"security.protocol": kafkaOptions.Protocol,
-		"fetch.max.bytes": kafkaOptions.GetMaxFetch(),
-		"max.partition.fetch.bytes": kafkaOptions.GetMaxPartition(),
-
 	})
 
 	if err != nil {
@@ -120,34 +101,29 @@ func main() {
 
 	buffer := make([]*Signal, 0, maxBuffer)
 	prevTime := time.Now()
-	//prevCheck := time.Now()
+	prevCheck := time.Now()
 	for {
 		msg, err := c.ReadMessage(-1)
 		if err == nil {
 			signal := SignalFromJson(msg.Value)
 			buffer = append(buffer, signal)
 			now := time.Now()
-			span := now.Sub(prevTime).Seconds()
-			if len(buffer) == maxBuffer || span > influxOptions.getBatch() {
-				log.Println(span, len(buffer))
-				bufferClone := make([]*Signal, len(buffer))
-				copy(bufferClone, buffer)
-				//InfluxSinker(client, buffer, influxOptions)
-				go InfluxSinker(client, bufferClone, influxOptions)
-
+			if len(buffer) == maxBuffer || now.Sub(prevTime).Seconds() > influxOptions.getBatch() {
+				//bufferClone := make([]*Signal, len(buffer))
+				//copy(bufferClone, buffer)
+				InfluxSinker(client, buffer, influxOptions)
+				//go InfluxSinker(client, bufferClone, influxOptions)
 				//params := make(map[string]interface{})
 				//params["client"] = client
 				//params["data"] = bufferClone
 				//params["options"] = influxOptions
-
 				//pool.Invoke(params)
-				//pool.Process(params)
 				buffer = buffer[:0]
-				//nowCheck := time.Now()
-				//if nowCheck.Sub(prevCheck) > 5 {
-				//	//log.Println("working :" + signal.String())
-				//	prevCheck= nowCheck
-				//}
+				nowCheck := time.Now()
+				if nowCheck.Sub(prevCheck) > 5 {
+					//log.Println("working :" + signal.String())
+					prevCheck= nowCheck
+				}
 				prevTime = now
 			}
 		} else {
